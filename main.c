@@ -19,7 +19,7 @@ int main(int argc, char **argv){
         CPU * multiProcessor;
         multiProcessor = malloc(sizeof(CPU));
         // Initial values for the processor
-        multiProcessor->numberProcessorsFree = 0;
+        multiProcessor->numberProcessorsFree = 64;
         multiProcessor->tasksLoaded = 0;
         multiProcessor->accQueueLength = 0;
         multiProcessor->GLOBAL_TIME = 0;
@@ -28,14 +28,17 @@ int main(int argc, char **argv){
         }
         multiProcessor->runningUsage = 0;
         multiProcessor->mu = 0;
-        multiProcessor->loadBalanceTask = 0;
-        multiProcessor->remainingTasks = 0
-        
+        multiProcessor->loadBalanceTotal = 0;
+        multiProcessor->remainingTasks = 0;
+        multiProcessor->averageWaitOne = 0;
+        multiProcessor->averageWaitZero = 0;
+        multiProcessor->countZero = 0;
+        multiProcessor->countOne = 0;
         // Setup of the queue
-        Queue* zeroQueue;
+        Queue* zeroQueue = malloc(sizeof(Queue));
         zeroQueue->head = NULL;
         zeroQueue->rear = NULL;
-        Queue* oneQueue = NULL;
+        Queue* oneQueue = malloc(sizeof(Queue));
         oneQueue->head = NULL;
         oneQueue->rear = NULL;
         
@@ -43,13 +46,13 @@ int main(int argc, char **argv){
         // Load the queue and get values required to calculate mu
         double tasksSum = 0;
         double timeSum = 0;
-        double *totalSubTasks = tasksSum;
-        double *totalSubTime = timeSum;
+        double *totalSubTasks = &tasksSum;
+        double *totalSubTime = &timeSum;
         
-        Queue * superQueue;
+        Queue * superQueue = malloc(sizeof(Queue));
         superQueue->head = NULL;
         superQueue->rear = NULL;
-        LoadMajorQueue(superQueue, fp, totalSubTasks, totalSubTime, multiProcessor);
+        LoadMajorQueue(superQueue, fpRead, totalSubTasks, totalSubTime, multiProcessor);
 
         
         // Calculate MU constant based on the contents of the queue
@@ -57,6 +60,9 @@ int main(int argc, char **argv){
         multiProcessor->mu = MU; // Giving the value to the processor
 
         // Calculate load balancing factor for all the elements in the superQueue
-        LoadBalancingFactorQueue(superQueue);
+        LoadBalancingFactorQueue(superQueue, multiProcessor);
+        Simulation(superQueue, zeroQueue, oneQueue, multiProcessor);
+        Statistics(multiProcessor);
     }
+    return 1;
 }
